@@ -1,40 +1,55 @@
-const { recurringTimer, stopRecurringTimer } = require('../src/recurringTimer')
+// test/recurringTimer.test.js
 
-jest.useFakeTimers()
+const { recurringTimer } = require("../src/recurringTimer");
 
-describe('recurringTimer', () => {
-  test('should log the message at the specified interval', () => {
-    console.log = jest.fn() // Mock console.log
+jest.useFakeTimers();
 
-    const message = 'Recurring message'
-    const interval = 2000 // 2 seconds
-    const timerId = recurringTimer(message, interval)
+describe("recurringTimer", () => {
+  let logSpy;
 
-    // Simulate multiple intervals
-    jest.advanceTimersByTime(6000) // Advance by 6 seconds (3 intervals)
+  beforeEach(() => {
+    logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+  });
 
-    // Verify the message is logged 3 times
-    expect(console.log).toHaveBeenCalledTimes(3)
-    expect(console.log).toHaveBeenCalledWith(message)
+  afterEach(() => {
+    jest.clearAllTimers();
+    logSpy.mockRestore();
+  });
+
+  test("should log the message at the specified interval", () => {
+    const message = "Recurring message";
+    const interval = 2000; // 2 seconds
+
+    const timerId = recurringTimer(() => console.log(message), interval);
+
+    // Fast-forward time by 6 seconds (3 intervals)
+    jest.advanceTimersByTime(6000);
+
+    // Verify message was logged 3 times
+    expect(logSpy).toHaveBeenCalledTimes(3);
+    expect(logSpy).toHaveBeenCalledWith(message);
+
+    // Stop the recurring timer
+    clearInterval(timerId);
+  });
+
+  test("should stop logging when clearInterval is called", () => {
+    const message = "Stop this message";
+    const interval = 1000; // 1 second
+
+    const timerId = recurringTimer(() => console.log(message), interval);
+
+    // Simulate 2 intervals
+    jest.advanceTimersByTime(2000);
 
     // Stop the timer
-    stopRecurringTimer(timerId)
-  })
+    clearInterval(timerId);
 
-  test('should stop logging when stopRecurringTimer is called', () => {
-    console.log = jest.fn()
+    // Advance more time to check that no more logs happen
+    jest.advanceTimersByTime(3000);
 
-    const message = 'Stop this message'
-    const interval = 1000 // 1 second
-    const timerId = recurringTimer(message, interval)
-
-    // Simulate a few intervals and then stop
-    jest.advanceTimersByTime(3000) // Advance by 3 seconds
-    stopRecurringTimer(timerId)
-    jest.advanceTimersByTime(2000) // Advance by another 2 seconds
-
-    // Verify the message was logged 3 times and no more
-    expect(console.log).toHaveBeenCalledTimes(3)
-    expect(console.log).toHaveBeenCalledWith(message)
-  })
-})
+    // Message should only have been logged 2 times
+    expect(logSpy).toHaveBeenCalledTimes(2);
+    expect(logSpy).toHaveBeenCalledWith(message);
+  });
+});

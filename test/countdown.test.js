@@ -1,31 +1,44 @@
-const { countdownTimer } = require('../src/countdown');
+// test/countdown.test.js
 
-jest.useFakeTimers();
+const { countdownTimer } = require("../src/countdown");
 
-describe('countdownTimer', () => {
+jest.useFakeTimers(); // Use fake timers so we can control time
+
+describe("countdownTimer", () => {
+  let logSpy;
+
   beforeEach(() => {
-    console.log = jest.fn(); // Mock console.log
+    logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.clearAllMocks(); // Reset mocks after each test
+    jest.clearAllTimers();
+    logSpy.mockRestore();
   });
 
-  test('should log remaining time at intervals and stop at 0', () => {
-    const startTime = 5; // 5 seconds
+  test("should log remaining time at intervals and stop at 0", () => {
+    const startTime = 3; // countdown from 3 seconds
     const interval = 1000; // 1 second
-    const timerId = countdownTimer(startTime, interval);
 
-    // Fast-forward all timers
-    jest.advanceTimersByTime(startTime * interval);
+    countdownTimer(startTime, interval);
 
-    // Verify that console.log was called correctly
-    expect(console.log).toHaveBeenCalledTimes(startTime);
-    for (let i = startTime; i > 0; i--) {
-      expect(console.log).toHaveBeenCalledWith(i);
-    }
+    // Fast-forward time
+    jest.advanceTimersByTime(1000); // 1 second passed
+    expect(logSpy).toHaveBeenCalledWith(3);
 
-    // Verify clearInterval was called
-    clearInterval(timerId); // Ensure cleanup to avoid overlapping
+    jest.advanceTimersByTime(1000); // 2 seconds passed
+    expect(logSpy).toHaveBeenCalledWith(2);
+
+    jest.advanceTimersByTime(1000); // 3 seconds passed
+    expect(logSpy).toHaveBeenCalledWith(1);
+
+    jest.advanceTimersByTime(1000); // 4 seconds passed
+    expect(logSpy).toHaveBeenCalledWith(0);
+
+    jest.advanceTimersByTime(1000); // 5 seconds passed
+    expect(logSpy).toHaveBeenCalledWith("Time's up!");
+
+    // Total calls = 5
+    expect(logSpy).toHaveBeenCalledTimes(5);
   });
 });

@@ -28,6 +28,6 @@
   },
   "homepage": "https://github.com/learn-co-curriculum/Lab-Building-Timers-In-JavaScript#readme",
   "devDependencies": {
-    "jest": "^29.0.0"
+    "jest": "^30.2.0"
   }
 }
